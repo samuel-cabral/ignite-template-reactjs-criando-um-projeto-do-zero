@@ -35,7 +35,20 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps) {
-  const [posts, setPosts] = useState(postsPagination.results);
+  const formattedPosts = postsPagination.results.map(post => {
+    return {
+      ...post,
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
+    };
+  });
+
+  const [posts, setPosts] = useState(formattedPosts);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
   const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
 
@@ -127,26 +140,11 @@ export const getStaticProps: GetStaticProps = async () => {
       },
     });
 
-    const posts = response.results.map(post => {
-      const postData = JSON.stringify(post.data);
-      return {
-        slug: post.uid,
-        data: JSON.parse(postData),
-        first_publication_date: format(
-          new Date(post.first_publication_date),
-          'dd MMM yyyy',
-          {
-            locale: ptBR,
-          }
-        ),
-      };
-    });
-
     return {
       props: {
         postsPagination: {
           next_page: response.next_page,
-          results: posts,
+          results: response.results,
         },
       },
     };
